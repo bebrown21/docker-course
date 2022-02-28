@@ -1,0 +1,51 @@
+version: "3.8"
+services:
+  mongodb:
+    image: "mongo"
+    volumes:
+      - data:/data/db
+    # Manual env setup
+    # environment:
+      # MONGO_INITDB_ROOT_USERNAME: max
+      # MONGO_INITDB_ROOT_PASSWORD: secret
+      # OR key/value pairs
+      # - MONGO_INITDB_ROOT_USERNAME=max
+      # - MONGO_INITDB_ROOT_PASSWORD=secret
+      # OR env file ref
+    env_file:
+      - ./env/mongo.env
+
+  backend:
+    build: ./backend
+    # Setting up build manually
+    # build:
+    #   context: ./backend
+    #   dockerfile: Dockerfile
+    #   args:
+    ports:
+      - "80:80"
+    volumes:
+      # Volumns: need to be added to root volumes below
+      - logs:/app/logs
+      # Bind mounts
+      - ./backend:/app
+      - /app/node_modules
+    env_file:
+      - ./env/backend.env
+    depends_on:
+      - mongodb
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend/src:app/src
+    stdin_open: true
+    tty: true
+    depends_on:
+     - backend
+
+volumes:
+  data:
+  logs:
